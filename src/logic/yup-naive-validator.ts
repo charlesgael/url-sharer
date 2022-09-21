@@ -10,7 +10,6 @@ export function genRules(schema: yup.BaseSchema, root = true): any {
   if (schema instanceof yup.ObjectSchema) {
     if (root) { return Object.fromEntries(Object.entries(schema.fields).map(([name, subValidator]) => [name, genRules(subValidator as any, false)])) }
     else {
-      console.log(schema)
       return <FormItemRule>{
         type: 'object',
         required: (schema as any).exclusiveTests.required,

@@ -16,7 +16,7 @@ export class Group {
     title = 'New group'
 
   @is(a.string().required())
-    urlMatcher = '.*'
+    urlMatcher = '*:\/\/*\/*'
 
   @nestedType(() => Replacer, an.object().required())
     titleReplace: Replacer = new Replacer()
@@ -57,16 +57,6 @@ export const parse = async (str: string): Promise<SaveData> => {
     console.error('Error during parsing', err)
     return new SaveData()
   }
-
-  // try {
-  //   await validate({
-  //     object: obj,
-  //   })
-  // }
-  // catch (err) {
-  //   console.error('Error during validation', err)
-  //   return new SaveData()
-  // }
 
   return cast({
     object: obj,

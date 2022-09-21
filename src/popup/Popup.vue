@@ -8,23 +8,33 @@ import { useSaveData } from '~/logic/stored.config'
 const saveData = useSaveData()
 const message = useMessage()
 
-const selectedConfig = ref<number>()
-const selectedTabs = ref(false)
-const textCopied = ref(false)
-const config = computed(() => typeof selectedConfig.value === 'number' ? saveData.value.configs[selectedConfig.value] : undefined)
-const groupsSelections = ref<Tabs.Tab[][]>([])
-watch(config, (c) => {
-  if (c)
-    groupsSelections.value = c.groups.map(() => [])
-})
-
+// List of groups displayed for the user to choose
 const configsMenuOptions = computed<MenuMixedOption[]>(() => saveData.value.configs?.map((it, idx) => ({
   label: it.title,
   key: idx,
 })))
 
+// Index of the config clicked by the user (config is computed accordingly)
+const selectedConfig = ref<number>()
+const config = computed(() => typeof selectedConfig.value === 'number' ? saveData.value.configs[selectedConfig.value] : undefined)
+
+// Phase advancement
+const selectedTabs = ref(false)
+const textCopied = ref(false)
+
+// Groups selection (one array per group having an array of selected tabs for this group)
+const groupsSelections = ref<Tabs.Tab[][]>([])
+// Re-init groups selection depending on selected config
+watch(config, (c) => {
+  if (c)
+    groupsSelections.value = c.groups.map(() => [])
+})
+
 // methods
-const openOptionsPage = () => browser.runtime.openOptionsPage()
+const openOptionsPage = () => {
+  browser.runtime.openOptionsPage()
+  window.close()
+}
 const tabsSelected = () => {
   if (groupsSelections.value.flatMap(i => i).length)
     selectedTabs.value = true
@@ -35,6 +45,8 @@ const tabsSelected = () => {
 const copy = (text: string) => {
   navigator.clipboard.writeText(text)
   textCopied.value = true
+
+  setTimeout(() => window.close(), 3000)
 }
 
 const generateMarkdown = (): string => {
@@ -76,11 +88,13 @@ main.w-100.h-150.flex.flex-col
         mdi:wrench
 
   .relative.flex-1
+    //- First panel: Select a configuration
     .panel.z-10(:class="{passed: typeof selectedConfig === 'number'}")
       .title Select your configuration
       n-scrollbar.flex-1
         n-menu.w-full(v-model:value="selectedConfig" :options="configsMenuOptions")
 
+    //- Second panel: Select the tabs
     .panel.z-9(:class="{'not-yet': typeof selectedConfig !== 'number', passed: selectedTabs}")
       .title Select the tabs to include in your message
       n-scrollbar.flex-1
@@ -93,6 +107,7 @@ main.w-100.h-150.flex.flex-col
             ic:baseline-navigate-next
           | Next
 
+    //- Third panel: Select the generator
     .panel.z-8(:class="{'not-yet': !selectedTabs, passed: textCopied}")
       .title Generator
       n-scrollbar.w-full
@@ -100,6 +115,7 @@ main.w-100.h-150.flex.flex-col
           n-button.h-20.text-xl(v-for="generator in generators" @click="copy(generator.generate())")
             | {{generator.title}}
 
+    //- Copied show success message
     .panel.z-7.success(:class="{'not-yet': !textCopied}")
       .font-bold.text-xl Copied to clipboard
       div.mx-10.text-center You can now close the tool and paste it wherever you want !

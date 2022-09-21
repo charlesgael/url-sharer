@@ -32,7 +32,7 @@ n-layout(position="absolute" has-sider)
           ic:outline-plus
         | New Configuration
 
-  n-layout-content.p-4
+  n-layout-content
     EditConfig(v-if="isSelected" v-model="saveData.configs[selected]" @delete="removeConfig(selected)")
 </template>
 
